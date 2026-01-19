@@ -1,0 +1,35 @@
+name: Execute Air Quality Notebook
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch:   # Allows you to click a "Run" button manually
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install nbconvert ipykernel  # Required to run .ipynb files
+
+      - name: Execute Notebook
+        run: |
+          jupyter nbconvert --to notebook --execute Airquality_pred.ipynb --output executed_output.ipynb
+
+      - name: Commit and Push Results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "Auto-update prediction results" || echo "No changes to commit"
+          git push
